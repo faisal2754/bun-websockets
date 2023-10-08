@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+import { storeMessage } from "./services/message.service";
 
 const server = Bun.serve<{ userId: string }>({
   port: 3000,
@@ -13,9 +14,14 @@ const server = Bun.serve<{ userId: string }>({
       });
       server.publish("chat", payload);
     },
-    message: (ws, message) => {
+    message: async (ws, message) => {
       console.log("Client sent message", message);
       const userId = ws.data.userId;
+
+      // only handling string messages for now
+      if (typeof message === "string") {
+        await storeMessage({ userId, message });
+      }
 
       const payload = JSON.stringify({
         message: `Guest ${userId}: ${message}`,
